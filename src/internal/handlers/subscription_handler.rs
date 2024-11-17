@@ -1,33 +1,40 @@
-use std::sync::Arc;
-use actix_web::{HttpResponse, Responder};
+use crate::internal::app::usecases::subscription_usecase::{SubscriptionUseCase, SubscriptionUseCaseImpl};
+use crate::pkg::dto::subscription_dto::CreateSubscriptionDto;
+use actix_web::{web, HttpResponse, Responder};
 use serde_json::json;
-use crate::internal::app::usecase::subscription_usecase::{SubscriptionUseCase, SubscriptionUseCaseImpl};
+use crate::pkg::errors::custom_error::ResponseError;
 
-
-pub trait SubscriptionHandler {
-    fn new(service: Arc<SubscriptionUseCaseImpl>) -> Self;
-    async fn list(&self) -> impl Responder;
-}
+#[derive(Clone)]
 pub struct SubscriptionHandlerImpl {
-    service: Arc<SubscriptionUseCaseImpl>,
+    service: SubscriptionUseCaseImpl,
 }
 
-impl SubscriptionHandler for SubscriptionHandlerImpl {
-    fn new(service: Arc<SubscriptionUseCaseImpl>) -> Self {
+impl SubscriptionHandlerImpl {
+    pub fn new(service: SubscriptionUseCaseImpl) -> Self {
         Self { service }
     }
+}
 
-    async fn list(&self) -> impl Responder {
-        match self.service.list().await {
-            Ok(subscriptions) => HttpResponse::Ok().json(json!({
-                "data": subscriptions,
-                "message": "Successfully fetched subscriptions",
-                "code": 200
-            })),
-            Err(err) => HttpResponse::InternalServerError().json(json!({
-                "message": err.to_string(),
-                "code": 500
-            }))
-        }
+pub async fn subscription_handler_list(handler: web::Data<SubscriptionHandlerImpl>) -> impl Responder {
+    match handler.service.list().await {
+        Ok(subscriptions) => HttpResponse::Ok().json(json!({
+            "data": subscriptions,
+            "message": "Successfully fetched subscriptions",
+            "code": 200
+        })),
+        Err(err) => err.error_response(),
+    }
+}
+
+pub async fn subscription_handler_create(
+    handler: web::Data<SubscriptionHandlerImpl>,
+    input: web::Json<CreateSubscriptionDto>,
+) -> impl Responder {
+    match handler.service.create(input).await {
+        Ok(_) => HttpResponse::Created().json(json!({
+            "message": "Subscription created successfully",
+            "code": 201
+        })),
+        Err(err) => err.error_response()
     }
 }

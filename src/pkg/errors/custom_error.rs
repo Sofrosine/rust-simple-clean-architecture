@@ -3,24 +3,24 @@ use actix_web::http::StatusCode;
 use actix_web::HttpResponse;
 use serde::{Deserialize, Serialize};
 
-pub trait CustomResponse {
+pub trait ResponseError {
     fn status_code(&self) -> StatusCode;
-    fn response(&self) -> HttpResponse<BoxBody>;
+    fn error_response(&self) -> HttpResponse<BoxBody>;
 }
 
 #[derive(Debug)]
-pub struct SResponse {
+pub struct ErrorResponse {
     pub message: Option<String>,
     pub status: Option<String>,
-    pub status_code: StatusCode
+    pub err_type: StatusCode
 }
 
-impl SResponse {
-    pub fn new(status_code: StatusCode,
+impl ErrorResponse {
+    pub fn new(err_type: StatusCode,
                message: Option<String>,
                status: Option<String>,
-    ) -> SResponse {
-        SResponse {status_code, message, status}
+    ) -> ErrorResponse {
+        ErrorResponse {err_type, message, status}
     }
 }
 
@@ -30,12 +30,12 @@ struct ActualResponse {
     pub status: Option<String>,
 }
 
-impl CustomResponse for SResponse {
+impl ResponseError for ErrorResponse {
     fn status_code(&self) -> StatusCode {
-        self.status_code
+        self.err_type
     }
 
-    fn response(&self) -> HttpResponse {
+    fn error_response(&self) -> HttpResponse {
         let res = ActualResponse {
             message: self.message.clone(),
             status: self.status.clone()
