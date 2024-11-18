@@ -3,7 +3,7 @@ use crate::internal::entities::subscription::Subscription;
 
 pub trait SubscriptionRepository {
     fn new(database: PgPool) -> Self;
-    async fn list(&self) -> Result<Vec<Subscription>, Error>;
+    async fn list(&self, offset: u32, page_size: u32) -> Result<(Vec<Subscription>, i64), Error>;
     async fn create(&self, subscription: &Subscription) -> Result<(), Error>;
 }
 
@@ -17,16 +17,26 @@ impl SubscriptionRepository for SubscriptionRepositoryImpl {
         Self { database }
     }
 
-    async fn list(&self) -> Result<Vec<Subscription>, Error> {
+    async fn list(&self, offset: u32, page_size: u32) -> Result<(Vec<Subscription>, i64), Error> {
         let query = r#"
-            SELECT * FROM subscriptions ORDER BY price DESC
+            SELECT * FROM subscriptions ORDER BY price ASC LIMIT $1 OFFSET $2
+        "#;
+
+        let count_query = r#"
+            SELECT COUNT(*) AS total FROM subscriptions
         "#;
 
         let rows = query_as(query)
+            .bind(page_size as i64)
+            .bind(offset as i64)
             .fetch_all(&self.database)
             .await?;
 
-        Ok(rows)
+        let total: (i64,) = query_as(count_query)
+            .fetch_one(&self.database)
+            .await?;
+
+        Ok((rows, total.0))
     }
 
     async fn create(&self, subscription: &Subscription) -> Result<(), Error> {

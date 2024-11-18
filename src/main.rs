@@ -1,24 +1,18 @@
+use crate::cmd::routes::subscription_router::subscription_router;
 use crate::database::postgresql::get_pool;
 use crate::internal::app::repositories::subscription_repository::{SubscriptionRepository, SubscriptionRepositoryImpl};
 use crate::internal::app::usecases::subscription_usecase::{SubscriptionUseCase, SubscriptionUseCaseImpl};
-use crate::internal::handlers::subscription_handler::{subscription_handler_create, subscription_handler_list, SubscriptionHandlerImpl};
+use crate::internal::handlers::subscription_handler::SubscriptionHandlerImpl;
 use actix_cors::Cors;
 use actix_web::middleware::Logger;
-use actix_web::{http::header, web, App, HttpServer, Responder};
+use actix_web::{http::header, App, HttpServer};
 use dotenv::dotenv;
-use sqlx::{Pool, Postgres};
-use crate::cmd::routes::subscription_router::subscription_router;
 
 mod database;
 mod internal;
 mod cmd;
 mod pkg;
 mod helpers;
-
-pub struct AppState {
-    db: Pool<Postgres>,
-}
-
 
 
 #[actix_web::main]
@@ -51,7 +45,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let cors = Cors::default()
             .allowed_origin("http://localhost:3000")
-            .allowed_methods(vec!["GET", "POST", "PATCH", "DELETE"])
+            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
             .allowed_headers(vec![
                 header::CONTENT_TYPE,
                 header::AUTHORIZATION,
