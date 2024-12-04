@@ -1,23 +1,23 @@
-use crate::internal::app::usecases::subscription_usecase::{SubscriptionUseCase, SubscriptionUseCaseImpl};
-use crate::pkg::dto::subscription_dto::{CreateSubscriptionDto, UpdateSubscriptionDto};
 use actix_web::{web, HttpResponse, Responder};
 use actix_web::web::Query;
 use serde_json::json;
 use crate::helpers::custom_error::ResponseError;
 use crate::helpers::custom_response::{PaginatedResponse, PaginationParams};
+use crate::internal::app::usecases::subscription_type_usecase::{SubscriptionTypeUseCase, SubscriptionTypeUseCaseImpl};
+use crate::pkg::dto::subscription_type_dto::{CreateSubscriptionTypeDto, UpdateSubscriptionTypeDto};
 
 #[derive(Clone)]
-pub struct SubscriptionHandlerImpl {
-    service: SubscriptionUseCaseImpl,
+pub struct SubscriptionTypeHandlerImpl {
+    service: SubscriptionTypeUseCaseImpl,
 }
 
-impl SubscriptionHandlerImpl {
-    pub fn new(service: SubscriptionUseCaseImpl) -> Self {
+impl SubscriptionTypeHandlerImpl {
+    pub fn new(service: SubscriptionTypeUseCaseImpl) -> SubscriptionTypeHandlerImpl {
         Self { service }
     }
 }
 
-pub async fn subscription_handler_list(handler: web::Data<SubscriptionHandlerImpl>, params: Query<PaginationParams>) -> impl Responder {
+pub async fn subscription_type_handler_list(handler: web::Data<SubscriptionTypeHandlerImpl>, params: Query<PaginationParams>) -> impl Responder {
     let page = params.page.unwrap_or(1);
     let page_size = params.page_size.unwrap_or(10);
 
@@ -41,9 +41,9 @@ pub async fn subscription_handler_list(handler: web::Data<SubscriptionHandlerImp
     }
 }
 
-pub async fn subscription_handler_create(
-    handler: web::Data<SubscriptionHandlerImpl>,
-    input: web::Json<CreateSubscriptionDto>,
+pub async fn subscription_type_handler_create(
+    handler: web::Data<SubscriptionTypeHandlerImpl>,
+    input: web::Json<CreateSubscriptionTypeDto>,
 ) -> impl Responder {
     match handler.service.create(input).await {
         Ok(_) => HttpResponse::Created().json(json!({
@@ -54,10 +54,10 @@ pub async fn subscription_handler_create(
     }
 }
 
-pub async fn subscription_handler_update(
-    handler: web::Data<SubscriptionHandlerImpl>,
+pub async fn subscription_type_handler_update(
+    handler: web::Data<SubscriptionTypeHandlerImpl>,
     path: web::Path<String>,
-    input: web::Json<UpdateSubscriptionDto>,
+    input: web::Json<UpdateSubscriptionTypeDto>,
 ) -> impl Responder {
     let path_id = path.into_inner();
     match handler.service.update(path_id, input).await {
@@ -69,8 +69,8 @@ pub async fn subscription_handler_update(
     }
 }
 
-pub async fn subscription_handler_delete(
-    handler: web::Data<SubscriptionHandlerImpl>,
+pub async fn subscription_type_handler_delete(
+    handler: web::Data<SubscriptionTypeHandlerImpl>,
     path: web::Path<String>,
 ) -> impl Responder {
     let path_id = path.into_inner();

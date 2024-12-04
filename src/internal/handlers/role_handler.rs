@@ -1,31 +1,31 @@
-use crate::internal::app::usecases::subscription_usecase::{SubscriptionUseCase, SubscriptionUseCaseImpl};
-use crate::pkg::dto::subscription_dto::{CreateSubscriptionDto, UpdateSubscriptionDto};
 use actix_web::{web, HttpResponse, Responder};
 use actix_web::web::Query;
 use serde_json::json;
 use crate::helpers::custom_error::ResponseError;
 use crate::helpers::custom_response::{PaginatedResponse, PaginationParams};
+use crate::internal::app::usecases::role_usecase::{RoleUseCase, RoleUseCaseImpl};
+use crate::pkg::dto::role_dto::{CreateRoleDto, UpdateRoleDto};
 
 #[derive(Clone)]
-pub struct SubscriptionHandlerImpl {
-    service: SubscriptionUseCaseImpl,
+pub struct RoleHandlerImpl {
+    service: RoleUseCaseImpl,
 }
 
-impl SubscriptionHandlerImpl {
-    pub fn new(service: SubscriptionUseCaseImpl) -> Self {
+impl RoleHandlerImpl {
+    pub fn new(service: RoleUseCaseImpl) -> Self {
         Self { service }
     }
 }
 
-pub async fn subscription_handler_list(handler: web::Data<SubscriptionHandlerImpl>, params: Query<PaginationParams>) -> impl Responder {
+pub async fn role_handler_list(handler: web::Data<RoleHandlerImpl>, params: Query<PaginationParams>) -> impl Responder {
     let page = params.page.unwrap_or(1);
     let page_size = params.page_size.unwrap_or(10);
 
     match handler.service.list(page, page_size).await {
-        Ok((subscriptions, total_data)) => {
+        Ok((roles, total_data)) => {
             let total_pages = (total_data as f32 / page_size as f32).ceil() as u32;
             let response = PaginatedResponse {
-                data: subscriptions,
+                data: roles,
                 page_size,
                 page,
                 total_pages,
@@ -33,7 +33,7 @@ pub async fn subscription_handler_list(handler: web::Data<SubscriptionHandlerImp
             };
             HttpResponse::Ok().json(json!({
             "data": response,
-            "message": "Successfully fetched subscriptions",
+            "message": "Successfully fetched roles",
             "code": 200
         }))
         }
@@ -41,42 +41,42 @@ pub async fn subscription_handler_list(handler: web::Data<SubscriptionHandlerImp
     }
 }
 
-pub async fn subscription_handler_create(
-    handler: web::Data<SubscriptionHandlerImpl>,
-    input: web::Json<CreateSubscriptionDto>,
+pub async fn role_handler_create(
+    handler: web::Data<RoleHandlerImpl>,
+    input: web::Json<CreateRoleDto>,
 ) -> impl Responder {
     match handler.service.create(input).await {
         Ok(_) => HttpResponse::Created().json(json!({
-            "message": "Subscription created successfully",
+            "message": "Role created successfully",
             "code": 201
         })),
         Err(err) => err.error_response()
     }
 }
 
-pub async fn subscription_handler_update(
-    handler: web::Data<SubscriptionHandlerImpl>,
+pub async fn role_handler_update(
+    handler: web::Data<RoleHandlerImpl>,
     path: web::Path<String>,
-    input: web::Json<UpdateSubscriptionDto>,
+    input: web::Json<UpdateRoleDto>,
 ) -> impl Responder {
     let path_id = path.into_inner();
     match handler.service.update(path_id, input).await {
         Ok(_) => HttpResponse::Ok().json(json!({
-            "message": "Subscription updated successfully",
+            "message": "Role updated successfully",
             "code": 200
         })),
         Err(err) => err.error_response()
     }
 }
 
-pub async fn subscription_handler_delete(
-    handler: web::Data<SubscriptionHandlerImpl>,
+pub async fn role_handler_delete(
+    handler: web::Data<RoleHandlerImpl>,
     path: web::Path<String>,
 ) -> impl Responder {
     let path_id = path.into_inner();
     match handler.service.delete(path_id).await {
         Ok(_) => HttpResponse::Ok().json(json!({
-            "message": "Subscription deleted successfully",
+            "message": "Role deleted successfully",
             "code": 200
         })),
         Err(err) => err.error_response()

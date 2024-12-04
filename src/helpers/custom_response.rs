@@ -14,3 +14,8 @@ pub struct PaginatedResponse<T> {
     pub total_pages: u32,
     pub total_data: u32,
 }
+
+#[derive(Serialize)]
+pub struct Response<T> {
+    pub data: T,        // Dynamic data type
+}
