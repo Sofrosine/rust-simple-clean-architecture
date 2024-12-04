@@ -3,3 +3,4 @@ pub mod subscription_type_repository;
 pub mod role_repository;
 pub mod province_repository;
 pub mod city_repository;
+pub mod school_repository;

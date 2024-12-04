@@ -10,18 +10,22 @@ use dotenv::dotenv;
 use crate::cmd::routes::city_router::city_router;
 use crate::cmd::routes::province_router::province_router;
 use crate::cmd::routes::role_router::role_router;
+use crate::cmd::routes::school_router::school_router;
 use crate::cmd::routes::subscription_type_router::subscription_type_router;
 use crate::internal::app::repositories::city_repository::{CityRepository, CityRepositoryImpl};
 use crate::internal::app::repositories::province_repository::{ProvinceRepository, ProvinceRepositoryImpl};
 use crate::internal::app::repositories::role_repository::{RoleRepository, RoleRepositoryImpl};
+use crate::internal::app::repositories::school_repository::{SchoolRepository, SchoolRepositoryImpl};
 use crate::internal::app::repositories::subscription_type_repository::{SubscriptionTypeRepository, SubscriptionTypeRepositoryImpl};
 use crate::internal::app::usecases::city_usecase::{CityUseCase, CityUseCaseImpl};
 use crate::internal::app::usecases::province_usecase::{ProvinceUseCase, ProvinceUseCaseImpl};
 use crate::internal::app::usecases::role_usecase::{RoleUseCase, RoleUseCaseImpl};
+use crate::internal::app::usecases::school_usecase::{SchoolUseCase, SchoolUseCaseImpl};
 use crate::internal::app::usecases::subscription_type_usecase::{SubscriptionTypeUseCase, SubscriptionTypeUseCaseImpl};
 use crate::internal::handlers::city_handler::CityHandlerImpl;
 use crate::internal::handlers::province_handler::ProvinceHandlerImpl;
 use crate::internal::handlers::role_handler::RoleHandlerImpl;
+use crate::internal::handlers::school_handler::SchoolHandlerImpl;
 use crate::internal::handlers::subscription_type_handler::SubscriptionTypeHandlerImpl;
 
 mod database;
@@ -56,18 +60,21 @@ async fn main() -> std::io::Result<()> {
     let role_repository = RoleRepositoryImpl::new(shared_pool.clone());
     let province_repository = ProvinceRepositoryImpl::new(shared_pool.clone());
     let city_repository = CityRepositoryImpl::new(shared_pool.clone());
+    let school_repository = SchoolRepositoryImpl::new(shared_pool.clone());
 
     let subscription_usecase = SubscriptionUseCaseImpl::new(subscription_repository.clone(), subscription_type_repository.clone());
     let subscription_type_usecase = SubscriptionTypeUseCaseImpl::new(subscription_type_repository.clone(), subscription_repository.clone());
     let role_usecase = RoleUseCaseImpl::new(role_repository.clone());
     let province_usecase = ProvinceUseCaseImpl::new(province_repository.clone());
     let city_usecase = CityUseCaseImpl::new(city_repository.clone(), province_repository.clone());
+    let school_usecase = SchoolUseCaseImpl::new(school_repository);
 
     let subscription_handler = SubscriptionHandlerImpl::new(subscription_usecase);
     let subscription_type_handler = SubscriptionTypeHandlerImpl::new(subscription_type_usecase);
     let role_handler = RoleHandlerImpl::new(role_usecase);
     let province_handler = ProvinceHandlerImpl::new(province_usecase);
     let city_handler = CityHandlerImpl::new(city_usecase);
+    let school_handler = SchoolHandlerImpl::new(school_usecase);
 
     println!("🚀 Server started successfully");
 
@@ -87,6 +94,7 @@ async fn main() -> std::io::Result<()> {
             .configure(|cfg| role_router(cfg, role_handler.clone()))
             .configure(|cfg| province_router(cfg, province_handler.clone()))
             .configure(|cfg| city_router(cfg, city_handler.clone()))
+            .configure(|cfg| school_router(cfg, school_handler.clone()))
             .wrap(cors)
             .wrap(Logger::default())
     })
