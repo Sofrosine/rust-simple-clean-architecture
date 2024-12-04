@@ -8,5 +8,6 @@
     <file url="file://$PROJECT_DIR$/migrations/20241116152538_roles.up.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/migrations/20241116152539_provinces.up.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/migrations/20241116152540_cities.up.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/20241116152541_schools.up.sql" dialect="PostgreSQL" />
   </component>
 </project>

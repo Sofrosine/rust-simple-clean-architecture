@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS provinces
+(
+    id         VARCHAR(255) PRIMARY KEY NOT NULL,
+    name       VARCHAR(255)             NOT NULL UNIQUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    deleted_at TIMESTAMP WITH TIME ZONE NULL
+);
