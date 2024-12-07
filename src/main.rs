@@ -27,6 +27,7 @@ use crate::internal::handlers::province_handler::ProvinceHandlerImpl;
 use crate::internal::handlers::role_handler::RoleHandlerImpl;
 use crate::internal::handlers::school_handler::SchoolHandlerImpl;
 use crate::internal::handlers::subscription_type_handler::SubscriptionTypeHandlerImpl;
+use crate::pkg::s3::create_s3_client;
 
 mod database;
 mod internal;
@@ -51,6 +52,12 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
+    let s3_client = create_s3_client().await.unwrap_or_else(|err| {
+        eprintln!("🔥 Failed to initialize S3 client: {:?}", err);
+        std::process::exit(1);
+    });
+
+
     // Wrap the pool in an Arc to enable shared ownership
     let shared_pool = pool;
 
@@ -67,7 +74,7 @@ async fn main() -> std::io::Result<()> {
     let role_usecase = RoleUseCaseImpl::new(role_repository.clone());
     let province_usecase = ProvinceUseCaseImpl::new(province_repository.clone());
     let city_usecase = CityUseCaseImpl::new(city_repository.clone(), province_repository.clone());
-    let school_usecase = SchoolUseCaseImpl::new(school_repository);
+    let school_usecase = SchoolUseCaseImpl::new(school_repository, s3_client.clone());
 
     let subscription_handler = SubscriptionHandlerImpl::new(subscription_usecase);
     let subscription_type_handler = SubscriptionTypeHandlerImpl::new(subscription_type_usecase);

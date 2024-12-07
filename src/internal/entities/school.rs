@@ -7,8 +7,8 @@ use chrono::{DateTime, Utc};
 pub struct School {
     pub id: Uuid,               // UUID type for unique subscription identifier
     pub name: String,           // Subscription name, not null, unique
-    pub address: String,           // Subscription name, not null, unique
-    pub logo_path: String,           // Subscription name, not null, unique
+    pub address: String,
+    pub logo_path: String,
     pub subscription_id: Option<Uuid>,               // UUID type for unique subscription identifier
     pub province_id: Option<String>,           // Subscription name, not null, unique
     pub city_id: Option<String>,           // Subscription name, not null, unique

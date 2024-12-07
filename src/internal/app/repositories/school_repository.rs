@@ -76,7 +76,7 @@ impl SchoolRepository for SchoolRepositoryImpl {
             .bind(&school.name)
             .bind(&school.address)
             .bind(&school.logo_path)
-            .bind(&school.subscription_id)
+            .bind(school.subscription_id)
             .bind(&school.province_id)
             .bind(&school.city_id)
             .bind(school.created_at)

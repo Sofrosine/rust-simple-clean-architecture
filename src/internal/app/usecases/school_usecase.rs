@@ -7,10 +7,16 @@ use actix_web::web::Json;
 use chrono::Utc;
 use std::fmt::Debug;
 
+use aws_sdk_s3::Client;
+use actix_multipart::form::MultipartForm;
+use uuid::Uuid;
+use crate::pkg::s3::upload_file_to_s3;
+// Method to upload a logo to S3
+
 pub trait SchoolUseCase {
-    fn new(repository: SchoolRepositoryImpl) -> Self;
+    fn new(repository: SchoolRepositoryImpl, s3_client: Client) -> Self;
     async fn list(&self, page: u32, page_size: u32) -> Result<(Vec<School>, i64), ErrorResponse>;
-    async fn create(&self, form: Json<CreateSchoolDto>) -> Result<(), ErrorResponse>;
+    async fn create(&self, form: MultipartForm<CreateSchoolDto>) -> Result<(), ErrorResponse>;
     async fn update(&self, id: String, form: Json<UpdateSchoolDto>) -> Result<(), ErrorResponse>;
     async fn delete(&self, id: String) -> Result<(), ErrorResponse>;
 }
@@ -18,11 +24,12 @@ pub trait SchoolUseCase {
 #[derive(Debug, Clone)]
 pub struct SchoolUseCaseImpl {
     repository: SchoolRepositoryImpl,
+    s3_client: Client,
 }
 
 impl SchoolUseCase for SchoolUseCaseImpl {
-    fn new(repository: SchoolRepositoryImpl) -> Self {
-        Self { repository }
+    fn new(repository: SchoolRepositoryImpl, s3_client: Client) -> Self {
+        Self { repository, s3_client }
     }
 
     async fn list(&self, page: u32, page_size: u32) -> Result<(Vec<School>, i64), ErrorResponse> {
@@ -46,17 +53,16 @@ impl SchoolUseCase for SchoolUseCaseImpl {
         }
     }
 
-    async fn create(&self, form: Json<CreateSchoolDto>) -> Result<(), ErrorResponse> {
+    async fn create(&self, form: MultipartForm<CreateSchoolDto>) -> Result<(), ErrorResponse> {
         let CreateSchoolDto {
             name,
             address,
-            logo_path,
             subscription_id,
             province_id,
             city_id,
+            logo,
         } = form.into_inner();
 
-        // Validate input
         if name.trim().is_empty() {
             return Err(ErrorResponse::new(
                 StatusCode::BAD_REQUEST,
@@ -65,15 +71,33 @@ impl SchoolUseCase for SchoolUseCaseImpl {
             ));
         }
 
+        let address_str = address.map_or_else(|| "".to_string(), |addr| addr.to_string());
+        let province_id_option = province_id.map_or_else(|| None, |id| Some(id.to_string()));
+        let city_id_option = city_id.map_or_else(|| None, |id| Some(id.to_string()));
+        let subscription_id_option = subscription_id.map_or(None, |id| Some(id.to_string().parse().unwrap_or_default()));
+
+
+        let file_path = format!("school-logo/{}.{}", Uuid::new_v4(), "png");
+
+        // Upload file to S3 and get the path
+        match upload_file_to_s3(self.s3_client.clone(), logo, file_path.clone()).await {
+            Ok(path) => path,
+            Err(e) => return Err(ErrorResponse::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Some(format!("Failed to upload logo: {}", e)),
+                Some("FAILED".to_string()),
+            )),
+        };
+
         // Create school
         let school = School {
-            id: uuid::Uuid::new_v4(),
-            name,
-            address: address.unwrap_or_default(),
-            logo_path: logo_path.unwrap_or_default(),
-            subscription_id,
-            province_id,
-            city_id,
+            id: Uuid::new_v4(),
+            name: name.to_string(),
+            address: address_str,
+            logo_path: file_path.clone(),
+            subscription_id: subscription_id_option,
+            province_id: province_id_option,
+            city_id: city_id_option,
             created_at: Utc::now(),
             updated_at: Utc::now(),
             deleted_at: None,

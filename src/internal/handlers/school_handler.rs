@@ -1,3 +1,4 @@
+use actix_multipart::form::MultipartForm;
 use crate::internal::app::usecases::school_usecase::{SchoolUseCase, SchoolUseCaseImpl};
 use crate::pkg::dto::school_dto::{CreateSchoolDto, UpdateSchoolDto};
 use actix_web::{web, HttpResponse, Responder};
@@ -48,7 +49,7 @@ pub async fn school_handler_list(
 // Handler for creating a school
 pub async fn school_handler_create(
     handler: web::Data<SchoolHandlerImpl>,
-    input: web::Json<CreateSchoolDto>,
+    input: MultipartForm<CreateSchoolDto>,
 ) -> impl Responder {
     match handler.service.create(input).await {
         Ok(school) => HttpResponse::Created().json(json!({

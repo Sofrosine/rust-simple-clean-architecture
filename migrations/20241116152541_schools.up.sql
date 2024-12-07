@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS schools
     name            VARCHAR(255)             NOT NULL,
     address         TEXT,
     logo_path       TEXT,
-    subscription_id UUID,
+    subscription_id UUID                     NULL,
     province_id     VARCHAR(255),
     city_id         VARCHAR(255),
     created_at      TIMESTAMP WITH TIME ZONE          DEFAULT NOW(),
