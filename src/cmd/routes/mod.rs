@@ -4,3 +4,5 @@ pub mod role_router;
 pub mod province_router;
 pub mod city_router;
 pub mod school_router;
+pub mod user_router;
+pub mod auth;

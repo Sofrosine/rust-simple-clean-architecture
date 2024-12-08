@@ -7,7 +7,7 @@ pub trait SchoolRepository {
     async fn list(&self, offset: u32, page_size: u32) -> Result<(Vec<School>, i64), Error>;
     async fn get_by_id(&self, id: Uuid) -> Result<School, Error>;
     async fn get_by_subscription_id(&self, id: Uuid) -> Result<Vec<School>, Error>;
-    async fn create(&self, subscription: &School) -> Result<(), Error>;
+    async fn create(&self, subscription: &School) -> Result<School, Error>;
     async fn update(&self, subscription: &School) -> Result<(), Error>;
     async fn delete(&self, id: Uuid) -> Result<(), Error>;
 }
@@ -65,13 +65,14 @@ impl SchoolRepository for SchoolRepositoryImpl {
     }
 
 
-    async fn create(&self, school: &School) -> Result<(), Error> {
+    async fn create(&self, school: &School) -> Result<School, Error> {
         let query = r#"
             INSERT INTO schools (id, name, address, logo_path, subscription_id, province_id, city_id, created_at, updated_at, deleted_at)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            RETURNING id, name, address, logo_path, subscription_id, province_id, city_id, created_at, updated_at, deleted_at
         "#;
 
-        sqlx::query(query)
+        let created_school = sqlx::query_as::<_, School>(query)
             .bind(school.id)
             .bind(&school.name)
             .bind(&school.address)
@@ -82,11 +83,12 @@ impl SchoolRepository for SchoolRepositoryImpl {
             .bind(school.created_at)
             .bind(school.updated_at)
             .bind(school.deleted_at)
-            .execute(&self.database)
+            .fetch_one(&self.database)
             .await?;
 
-        Ok(())
+        Ok(created_school)
     }
+
 
     async fn update(&self, school: &School) -> Result<(), Error> {
         let query = r#"

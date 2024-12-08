@@ -7,6 +7,7 @@ pub trait RoleRepository {
 
         async fn list(&self, offset: u32, page_size: u32) -> Result<(Vec<Role>, i64), Error>;
     async fn get_by_id(&self, id: Uuid) -> Result<Role, Error>;
+    async fn get_by_name(&self, name: String) -> Result<Role, Error>;
     async fn create(&self, role: &Role) -> Result<(), Error>;
     async fn update(&self, role: &Role) -> Result<(), Error>;
     async fn delete(&self, id: Uuid) -> Result<(), Error>;
@@ -50,6 +51,16 @@ impl RoleRepository for RoleRepositoryImpl {
         "#;
 
         let role = query_as(query).bind(id).fetch_one(&self.database).await?;
+
+        Ok(role)
+    }
+
+    async fn get_by_name(&self, name: String) -> Result<Role, Error> {
+        let query = r#"
+            SELECT * FROM roles WHERE name = $1 AND deleted_at IS NULL
+        "#;
+
+        let role = query_as(query).bind(name).fetch_one(&self.database).await?;
 
         Ok(role)
     }

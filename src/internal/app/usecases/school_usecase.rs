@@ -77,17 +77,20 @@ impl SchoolUseCase for SchoolUseCaseImpl {
         let subscription_id_option = subscription_id.map_or(None, |id| Some(id.to_string().parse().unwrap_or_default()));
 
 
-        let file_path = format!("school-logo/{}.{}", Uuid::new_v4(), "png");
+        let mut file_path = String::from("");
 
         // Upload file to S3 and get the path
-        match upload_file_to_s3(self.s3_client.clone(), logo, file_path.clone()).await {
-            Ok(path) => path,
-            Err(e) => return Err(ErrorResponse::new(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Some(format!("Failed to upload logo: {}", e)),
-                Some("FAILED".to_string()),
-            )),
-        };
+       if !logo.is_none() {
+           file_path = format!("school-logo/{}.{}", Uuid::new_v4(), "png");
+           match upload_file_to_s3(self.s3_client.clone(), logo, file_path.clone()).await {
+               Ok(path) => path,
+               Err(e) => return Err(ErrorResponse::new(
+                   StatusCode::INTERNAL_SERVER_ERROR,
+                   Some(format!("Failed to upload logo: {}", e)),
+                   Some("FAILED".to_string()),
+               )),
+           };
+       }
 
         // Create school
         let school = School {
@@ -104,7 +107,7 @@ impl SchoolUseCase for SchoolUseCaseImpl {
         };
 
         match self.repository.create(&school).await {
-            Ok(()) => Ok(()),
+            Ok(_school) => Ok(()),
             Err(error) => Err(ErrorResponse::new(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Some(error.to_string()),
